@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.opportunity-os/
+.pytest_cache/
+evaluations/_sandbox/
+
+# vendored third-party reference, read-only (see CLAUDE.md §3.6)
+evaluations/hermes/source/
+
+# generated architecture diagrams — derived from registry/state machine, NEVER a second source of truth;
+# regenerate with `python -m tests.architecture_flow` (see CLAUDE.md §3.5)
+docs/generated/

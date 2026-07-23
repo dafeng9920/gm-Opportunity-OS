@@ -1,0 +1,11 @@
+[project]
+name = "opportunity-os"
+version = "0.1.0"
+description = "Minimal, business-agnostic Opportunity OS foundation"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["core", "evidence", "candidates"]

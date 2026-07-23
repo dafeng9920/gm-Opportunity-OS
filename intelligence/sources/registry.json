@@ -1,0 +1,6 @@
+﻿[
+  {"id": "steamdb", "name": "SteamDB", "type": "Reference", "status": "REFERENCE_ONLY", "capabilities": []},
+  {"id": "igdb", "name": "IGDB", "type": "API", "status": "RESERVED", "capabilities": []},
+  {"id": "youtube", "name": "YouTube", "type": "Signal", "status": "ACTIVE", "capabilities": [{"id": "youtube-rss", "adapter_id": "adapter.youtube-signal", "supports": ["video_signal"], "limitations": ["fixed channels", "no search", "public RSS only"]}]},
+  {"id": "roblox-official", "name": "Roblox Official", "type": "Data Source", "status": "PLANNED", "capabilities": []}
+]

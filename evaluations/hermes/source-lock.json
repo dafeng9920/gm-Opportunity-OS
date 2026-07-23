@@ -1,0 +1,15 @@
+{
+    "hash":  "861CABAE2A1C28965919DECE260BFDC6FBBF5F023CC70FF9E1169140EFA06FC1",
+    "version":  "2026.7.20",
+    "repository":  "https://github.com/NousResearch/hermes-agent",
+    "acquired_at":  "2026-07-23T15:40:48.9198327Z",
+    "name":  "hermes",
+    "source_directory":  "evaluations/hermes/source/hermes-agent-2026.7.20",
+    "archive":  "evaluations/hermes/source/hermes-agent-v2026.7.20.zip",
+    "install":  "not installed",
+    "execution":  "not executed",
+    "tag":  "v2026.7.20",
+    "hash_algorithm":  "SHA-256",
+    "license":  "MIT",
+    "commit":  "3ef6bbd201263d354fd83ec55b3c306ded2eb72a"
+}

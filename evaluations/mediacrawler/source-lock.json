@@ -1,0 +1,1 @@
+{"source":"https://github.com/NanmiCoder/MediaCrawler.git","tag":null,"commit":"0625e01a6bc717a3fc9c96d3dac7fb8957043838","version":"unreleased main snapshot","acquisition":"git ls-remote origin HEAD verified the commit; shallow clone was cancelled before checkout after timeout. No code executed.","environment":"Windows; Python 3.12.10; no dependencies installed."}

@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-07-23T15:27:00Z",
+  "runtime_id": "runtime.scrapling-venv",
+  "adapter_id": "adapter.scrapling",
+  "external_version": "scrapling@0.4.11",
+  "target": "https://example.com/",
+  "evidence_id": "64174627-785d-4fb1-9c6d-15af06166bd3",
+  "audit_event_id": "b7f58934-45e6-4e64-942e-90d8df6a2269",
+  "execution_ms": 683,
+  "result_hash": "1201b0483ec672f3271ad0e629c9b9cd95feb8493af2d8671459fb881594c7ea",
+  "decision": "ALLOW",
+  "network_policy": "allowlisted: example.com",
+  "authentication": "none",
+  "browser_automation": false
+}

@@ -1,0 +1,19 @@
+﻿skill_id: opportunity.judge
+name: Opportunity Judge
+version: v0.1
+responsibility: Interpret supplied candidate, evidence, and gate facts without deciding permission.
+input_contract: JudgeInput v0.1
+output_contract: JudgeAssessment v0.1
+allowed_actions:
+  - read provided context
+  - produce structured assessment
+  - request allowed tools
+forbidden_actions:
+  - modify Evidence
+  - modify Candidate
+  - bypass Gate
+  - call Triad directly
+  - change Runtime policy
+  - create state
+minimal_prompt: ../../prompts/opportunity-judge.md
+status: implemented

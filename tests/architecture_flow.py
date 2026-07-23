@@ -25,6 +25,8 @@ def main() -> None:
     registry.register(Component("plugin.roblox-opportunity", "Roblox Opportunity Plugin", "domain-plugin", "0.1", "implemented", "structured Roblox opportunity assessment rules"))
     registry.register(Component("adapter.youtube-signal", "YouTube RSS Signal Adapter", "adapter", "0.1", "active", "public channel RSS to signal discovery"))
     registry.register(Component("source.youtube", "YouTube", "data_source", "rss-v1", "active", "restricted public channel signal source"))
+    registry.register(Component("contract.opportunity-packet", "Opportunity Packet Contract", "output-contract", "0.1", "implemented", "canonical immutable opportunity output"))
+    registry.register(Component("system.skill-layer", "Minimal Agent Skill Layer", "skill-system", "0.1", "implemented", "registered skills, invocation contracts, and output validation"))
     registry.register_adapter(AdapterRegistration("adapter.youtube-signal", "scrapling@0.4.11", "0.1", "restricted-v0", "crawler.v0", "active"))
     registry.register_adapter(AdapterRegistration("adapter.hermes", "hermes-agent@2026.7.20", "0.1.0", "restricted-v0", "agent.v0", "active"))
     registry.register_adapter(AdapterRegistration("adapter.scrapling", "scrapling@0.4.11", "0.1.0", "restricted-v0", "crawler.v0", "active"))
@@ -43,6 +45,8 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
 
 
 

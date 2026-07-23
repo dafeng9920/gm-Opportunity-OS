@@ -6,7 +6,7 @@ from hashlib import sha256
 from typing import Any, Literal
 from uuid import uuid4
 
-ComponentType = Literal["agent", "skill", "crawler", "adapter", "runtime", "plugin", "domain-plugin", "data_source"]
+ComponentType = Literal["agent", "skill", "crawler", "adapter", "runtime", "plugin", "domain-plugin", "output-contract", "skill-system", "data_source"]
 ComponentStatus = Literal["active", "inactive", "implemented", "deprecated"]
 
 
@@ -33,7 +33,7 @@ class Component:
     def __post_init__(self) -> None:
         for field_name in ("id", "name", "version", "capability", "created_at"):
             _required(getattr(self, field_name), field_name)
-        if self.type not in {"agent", "skill", "crawler", "adapter", "runtime", "plugin", "domain-plugin", "data_source"}:
+        if self.type not in {"agent", "skill", "crawler", "adapter", "runtime", "plugin", "domain-plugin", "output-contract", "skill-system", "data_source"}:
             raise ValueError("type is not a supported component type")
         if self.status not in {"active", "inactive", "implemented", "deprecated"}:
             raise ValueError("status is not a supported component status")
@@ -143,6 +143,8 @@ class RuntimeRegistration:
             _required(getattr(self, field_name), field_name)
         if self.status not in {"available", "unavailable", "deprecated"}:
             raise ValueError("status is not a supported runtime status")
+
+
 
 
 

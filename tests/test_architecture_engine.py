@@ -22,6 +22,8 @@ class ArchitectureEngineTests(unittest.TestCase):
         registry.register(Component("plugin.roblox-opportunity", "Roblox Opportunity Plugin", "domain-plugin", "0.1", "implemented", "structured Roblox opportunity assessment rules"))
         registry.register(Component("adapter.youtube-signal", "YouTube RSS Signal Adapter", "adapter", "0.1", "active", "public channel RSS to signal discovery"))
         registry.register(Component("source.youtube", "YouTube", "data_source", "rss-v1", "active", "restricted public channel signal source"))
+        registry.register(Component("contract.opportunity-packet", "Opportunity Packet Contract", "output-contract", "0.1", "implemented", "canonical immutable opportunity output"))
+        registry.register(Component("system.skill-layer", "Minimal Agent Skill Layer", "skill-system", "0.1", "implemented", "registered skills, invocation contracts, and output validation"))
         registry.register_adapter(AdapterRegistration("adapter.scrapling", "scrapling@0.4.11", "0.1.0", "restricted-v0", "crawler.v0", "active"))
         registry.register_runtime(RuntimeRegistration("runtime.scrapling-venv", "scrapling-venv", "subprocess", "0.4.11", "restricted-v0", "available"))
         ContractRegistry(database).register(ContractRegistration("crawler.v0", "0.1", "external -> evidence", "discovery records enter Core"))
@@ -46,6 +48,8 @@ class ArchitectureEngineTests(unittest.TestCase):
         self.assertIn("Opportunity Judge Agent", fact)
         self.assertIn("Roblox Opportunity Plugin", fact)
         self.assertIn("YouTube RSS Signal Adapter", fact)
+        self.assertIn("Opportunity Packet Contract", fact)
+        self.assertIn("Minimal Agent Skill Layer", fact)
         self.assertIn("implemented", fact)
         self.assertIn("crawler.v0", fact)
         self.assertIn("SOURCE_ACQUIRED", lifecycle)
@@ -53,6 +57,8 @@ class ArchitectureEngineTests(unittest.TestCase):
         self.assertIn("runtime.scrapling-venv", runtime)
         self.assertIn("Evidence Ledger", runtime)
         self.assertNotIn("Triad Governance", fact)
+
+
 
 
 

@@ -1,0 +1,11 @@
+version: 0.1
+kind: planned-architecture
+nodes:
+  - id: governance.triad
+    name: Triad Governance
+  - id: feedback.revenue
+    name: Revenue Feedback
+  - id: retrieval.3d-rag
+    name: 3D-RAG
+  - id: plugin.roblox
+    name: Roblox Plugin

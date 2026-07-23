@@ -2,9 +2,9 @@
 
 Reviewed before implementation (read-only):
 
-- `D:\gm-lite\.claude\skills\gm-triad-dispatch\SKILL.md`
-- `D:\gm-lite\.claude\skills\gm-triad-prompt-checklist\SKILL.md`
-- `D:\gm-lite\TRIAD_ROLE_BOUNDARY_PROMPT_TEMPLATE.md`
+- `gm-lite/.claude/skills/gm-triad-dispatch/SKILL.md`
+- `gm-lite/.claude/skills/gm-triad-prompt-checklist/SKILL.md`
+- `gm-lite/TRIAD_ROLE_BOUNDARY_PROMPT_TEMPLATE.md`
 
 Preserved as principles: fixed dispatch inputs, pre-dispatch readiness checks, ordered independent review, and refusal to substitute a missing upstream role.
 

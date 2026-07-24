@@ -39,3 +39,7 @@ The first real Fact producer measures `available_sources@0.1` from persisted Evi
 ## Long Tail Count Fact Producer v0.1
 
 `long_tail_count@0.1` is a reproducible count from persisted structured keyword-corpus Evidence, not a manual total. See [docs/long-tail-count-producer.md](long-tail-count-producer.md).
+
+## Monetization Path Fact Producer v0.1
+
+monetization_path@0.1 is one controlled, Evidence-backed path value; it is not a profitability conclusion. See [docs/monetization-path-producer.md](monetization-path-producer.md).

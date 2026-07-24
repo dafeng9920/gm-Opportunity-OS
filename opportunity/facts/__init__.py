@@ -9,5 +9,7 @@ from .keyword_difficulty import KeywordDifficultyMeasurement, SearchResultObserv
 from .keyword_difficulty_producer import KeywordDifficultyProducer
 from .long_tail import LongTailMeasurement
 from .long_tail_producer import LongTailCountProducer
+from .monetization import MonetizationEvidenceKind, MonetizationPath, MonetizationPathMeasurement
+from .monetization_producer import MonetizationPathProducer
 
-__all__ = ["FactProducer", "FactProducerRegistry", "FactProductionBoundary", "FactProductionRequest", "FactProductionStore", "FactSupport", "MeasurementArtifact", "ProducedGateFact", "SourceInventoryProducer", "TrendMeasurement", "TrendSignalProducer", "KeywordDifficultyMeasurement", "KeywordDifficultyProducer", "SearchResultObservation", "LongTailMeasurement", "LongTailCountProducer"]
+__all__ = ["FactProducer", "FactProducerRegistry", "FactProductionBoundary", "FactProductionRequest", "FactProductionStore", "FactSupport", "MeasurementArtifact", "ProducedGateFact", "SourceInventoryProducer", "TrendMeasurement", "TrendSignalProducer", "KeywordDifficultyMeasurement", "KeywordDifficultyProducer", "SearchResultObservation", "LongTailMeasurement", "LongTailCountProducer", "MonetizationEvidenceKind", "MonetizationPath", "MonetizationPathMeasurement", "MonetizationPathProducer"]

@@ -128,8 +128,13 @@ class CapturedExternalIntelligenceAdapter:
             self._audits.append(audit); return ExternalAdapterResult(raw, audit, None)
 
 class ZhipuProviderError(RuntimeError):
-    pass
-
+    def __init__(self, category: str, *, endpoint: str | None = None, transport_stage: str = "before_request", http_status: int | None = None, timeout_class: str | None = None) -> None:
+        super().__init__(category)
+        self.category = category
+        self.endpoint = endpoint
+        self.transport_stage = transport_stage
+        self.http_status = http_status
+        self.timeout_class = timeout_class
 
 class ZhipuCapturedProvider:
     """Single-provider HTTP client. It only returns captured, untrusted cognition output."""
@@ -177,14 +182,74 @@ class ZhipuCapturedProvider:
                 with urllib.request.urlopen(http, timeout=self._timeout_seconds) as result:
                     response = json.loads(result.read().decode("utf-8"))
         except (TimeoutError, urllib.error.URLError, urllib.error.HTTPError) as error:
-            raise ZhipuProviderError(type(error).__name__) from error
+            raise ZhipuProviderError(type(error).__name__, endpoint=self.endpoint, transport_stage="response_received" if isinstance(error, urllib.error.HTTPError) else "request_sent", http_status=getattr(error, "code", None), timeout_class=type(error).__name__ if isinstance(error, TimeoutError) else None) from error
         try:
             content = response["choices"][0]["message"]["content"]
             payload = json.loads(content) if isinstance(content, str) else content
         except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
-            raise ZhipuProviderError("malformed provider response") from error
+            raise ZhipuProviderError("malformed provider response", endpoint=self.endpoint, transport_stage="response_parsing") from error
         response_id = str(response.get("id", uuid4()))
         artifact = RawOutputArtifact("zhipu", self._model, "zhipu-external-adapter@0.1", f"zhipu-response:{response_id}", "phase-18.29-zhipu-http-v1", self._model, "prompt://phase-18.29/zhipu-closed-schema-v1")
         return artifact, payload
 
+
+
+class ZhipuAnthropicCapturedProvider:
+    """Zhipu Anthropic-compatible Messages client; no Fact or governance capability."""
+    endpoint = "https://open.bigmodel.cn/api/anthropic/v1/messages"
+    model = "glm-5.2"
+
+    def __init__(self, timeout_seconds: float = 30.0, transport=None) -> None:
+        self._timeout_seconds = timeout_seconds
+        self._transport = transport
+
+    def invoke(self, request: Mapping[str, Any]) -> tuple[RawOutputArtifact, Any]:
+        import os
+        import urllib.error
+        import urllib.request
+        key = os.environ.get("ZHIPU_API_KEY")
+        if not key:
+            raise ZhipuProviderError("configured Zhipu API key environment variable is not available")
+        bounded = {name: request[name] for name in ("candidate_id", "measurement_artifact_ids", "evidence_ids", "requested_fact_id", "requested_fact_version")}
+        body = {"model": self.model, "max_tokens": 512, "stream": False, "system": "Return only JSON with requested_fact_id, requested_fact_version, measurement_artifact_ids, evidence_ids, analysis_summary, assumptions, uncertainty, missing_information. Never return scores, recommendations, fact values, or decisions.", "messages": [{"role": "user", "content": json.dumps(bounded, sort_keys=True)}]}
+        try:
+            if self._transport is not None:
+                response = self._transport(body, key, self._timeout_seconds)
+            else:
+                wire=json.dumps(body).encode("utf-8")
+                http=urllib.request.Request(self.endpoint,data=wire,headers={"x-api-key":key,"anthropic-version":"2023-06-01","content-type":"application/json"},method="POST")
+                with urllib.request.urlopen(http,timeout=self._timeout_seconds) as result:
+                    response=json.loads(result.read().decode("utf-8"))
+        except (TimeoutError, urllib.error.URLError, urllib.error.HTTPError) as error:
+            raise ZhipuProviderError(type(error).__name__, endpoint=self.endpoint, transport_stage="response_received" if isinstance(error, urllib.error.HTTPError) else "request_sent", http_status=getattr(error, "code", None), timeout_class=type(error).__name__ if isinstance(error, TimeoutError) else None) from error
+        try:
+            content=response["content"][0]["text"]
+            payload=json.loads(content)
+        except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+            raise ZhipuProviderError("malformed provider response", endpoint=self.endpoint, transport_stage="response_parsing") from error
+        response_id=str(response.get("id",uuid4()))
+        artifact=RawOutputArtifact("zhipu_anthropic",self.model,"zhipu-anthropic-adapter@0.1",f"zhipu-anthropic-response:{response_id}","phase-18.29-zhipu-anthropic-v1",self.model,"prompt://phase-18.29/zhipu-anthropic-closed-schema-v1")
+        return artifact,payload
+
+@dataclass(frozen=True, slots=True)
+class ProviderFailureAudit:
+    provider: str
+    endpoint: str
+    model: str
+    transport_stage: str
+    exception_category: str
+    http_status: int | None = None
+    timeout_class: str | None = None
+    failure_audit_id: str = field(default_factory=lambda: str(uuid4()))
+    captured_at: str = field(default_factory=_now)
+
+
+class ProviderFailureAuditStore:
+    """Append-only safe provider failure observability; never stores response data or secrets."""
+    def __init__(self, database: Path | str) -> None:
+        self._db=sqlite3.connect(database)
+        self._db.execute("CREATE TABLE IF NOT EXISTS provider_failure_audits (id TEXT PRIMARY KEY, provider TEXT, endpoint TEXT, model TEXT, transport_stage TEXT, exception_category TEXT, http_status INTEGER, timeout_class TEXT, captured_at TEXT)")
+        self._db.commit()
+    def append(self, audit: ProviderFailureAudit) -> None:
+        self._db.execute("INSERT INTO provider_failure_audits VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",(audit.failure_audit_id,audit.provider,audit.endpoint,audit.model,audit.transport_stage,audit.exception_category,audit.http_status,audit.timeout_class,audit.captured_at)); self._db.commit()
 

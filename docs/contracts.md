@@ -43,3 +43,7 @@ The first real Fact producer measures `available_sources@0.1` from persisted Evi
 ## Monetization Path Fact Producer v0.1
 
 monetization_path@0.1 is one controlled, Evidence-backed path value; it is not a profitability conclusion. See [docs/monetization-path-producer.md](monetization-path-producer.md).
+
+## Multi-Fact Gate Evaluation v0.1
+
+Gate evaluation aggregates only Accepted Facts into a deterministic Gate Assessment Record; it is not a Judge or commercial decision. See [docs/multi-fact-gate-evaluation.md](multi-fact-gate-evaluation.md).

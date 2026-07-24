@@ -47,3 +47,7 @@ monetization_path@0.1 is one controlled, Evidence-backed path value; it is not a
 ## Multi-Fact Gate Evaluation v0.1
 
 Gate evaluation aggregates only Accepted Facts into a deterministic Gate Assessment Record; it is not a Judge or commercial decision. See [docs/multi-fact-gate-evaluation.md](multi-fact-gate-evaluation.md).
+
+## Judge Boundary Foundation v0.1
+
+A Gate Assessment can become a strictly scoped JudgeInput only when its referenced Facts are Accepted Facts. Static Judge output is explicitly STATIC_TEST_ONLY, never a real Agent Runtime. See [docs/judge-boundary-foundation.md](judge-boundary-foundation.md).

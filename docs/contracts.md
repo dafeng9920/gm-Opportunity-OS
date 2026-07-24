@@ -31,3 +31,7 @@ The first real Fact producer measures `available_sources@0.1` from persisted Evi
 ## Trend Signal Fact Producer v0.1
 
 `trend_up@0.1` is produced from one persisted, structured Trend Evidence record through the Fact Production and Fact Quality boundaries. See [docs/trend-signal-producer.md](trend-signal-producer.md).
+
+## Keyword Difficulty Fact Producer v0.1
+
+keyword_difficulty@0.1 is a reproducible calculation from persisted structured SERP Evidence, not an external API truth claim. See [docs/keyword-difficulty-producer.md](keyword-difficulty-producer.md).

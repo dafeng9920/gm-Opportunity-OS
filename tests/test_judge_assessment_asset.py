@@ -1,4 +1,4 @@
-﻿import ast
+import ast
 import sqlite3
 import unittest
 from dataclasses import FrozenInstanceError, replace
@@ -11,6 +11,7 @@ from opportunity.assessments import (
     JudgeAssessmentRecord,
     JudgeAssessmentStore,
     JudgeInputHasher,
+    JudgeRuntimeSource,
 )
 from opportunity.gates.contracts import GateStatus, OpportunityGateResult, RuleResult
 from opportunity.judge import AssessmentRecommendation, JudgeAssessment, JudgeInput
@@ -42,7 +43,7 @@ class JudgeAssessmentAssetTests(unittest.TestCase):
         return JudgeAssessmentRecord(
             JudgeInputHasher.hash(self.judge_input), self.candidate.id, self.assessment,
             (self.evidence.id,), ("demand@0.1",), "opportunity.judge", "v0.1",
-            runtime_id, runtime_version, audit_refs, source, "0.1",
+            runtime_id, runtime_version, audit_refs, source, "0.1", runtime_source=JudgeRuntimeSource.STATIC_ONLY if source is AssessmentRecordSource.STATIC_TEST_ONLY else JudgeRuntimeSource.LLM_RUNTIME,
         )
 
     def test_valid_record_is_immutable_and_versioned(self) -> None:
@@ -107,5 +108,3 @@ class JudgeAssessmentAssetTests(unittest.TestCase):
                 "builders", "runtime.policy", "runtime.audit", "skills", "adapters", "crawlers",
             ):
                 self.assertNotIn(forbidden, imports)
-
-

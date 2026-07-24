@@ -55,3 +55,7 @@ A Gate Assessment can become a strictly scoped JudgeInput only when its referenc
 ## Gate Assessment Asset Persistence v0.1
 
 Gate Assessment results become append-only assets before the Judge layer. A persisted GateAssessmentAsset binds the Candidate, Accepted Fact references, policy/version, deterministic Gate results, and status; see [docs/gate-assessment-asset-boundary.md](gate-assessment-asset-boundary.md).
+
+## Judge Runtime Adapter Foundation v0.1
+
+A Judge Runtime receives only a persisted GateAssessmentAsset through JudgeRuntimeAdapter and produces a provenance-bound JudgeAssessmentRecord. Static output remains explicitly STATIC_TEST_ONLY; see [docs/judge-runtime-adapter-foundation.md](judge-runtime-adapter-foundation.md).

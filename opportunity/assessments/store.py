@@ -1,4 +1,4 @@
-﻿"""Append-only SQLite storage for JudgeAssessmentRecord assets."""
+"""Append-only SQLite storage for JudgeAssessmentRecord assets."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 from opportunity.judge.contracts import AssessmentRecommendation, JudgeAssessment
 
-from .contracts import AssessmentRecordSource, JudgeAssessmentRecord
+from .contracts import AssessmentRecordSource, JudgeAssessmentRecord, JudgeRuntimeSource
 
 
 class JudgeAssessmentStore:
@@ -22,19 +22,19 @@ class JudgeAssessmentStore:
             "CREATE TABLE IF NOT EXISTS judge_assessment_records ("
             "assessment_id TEXT PRIMARY KEY, judge_input_hash TEXT, candidate_id TEXT, assessment TEXT, "
             "evidence_refs TEXT, gate_refs TEXT, skill_id TEXT, skill_version TEXT, runtime_id TEXT, "
-            "runtime_version TEXT, audit_refs TEXT, source TEXT, record_version TEXT, created_at TEXT)"
+            "runtime_version TEXT, audit_refs TEXT, source TEXT, record_version TEXT, created_at TEXT, input_asset_id TEXT, runtime_source TEXT)"
         )
         self._db.commit()
 
     def append(self, record: JudgeAssessmentRecord) -> None:
         self._db.execute(
-            "INSERT INTO judge_assessment_records VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO judge_assessment_records VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 record.assessment_id, record.judge_input_hash, record.candidate_id,
                 json.dumps(self._assessment_to_dict(record.assessment), sort_keys=True),
                 json.dumps(record.evidence_refs), json.dumps(record.gate_refs), record.skill_id,
                 record.skill_version, record.runtime_id, record.runtime_version,
-                json.dumps(record.audit_refs), record.source.value, record.record_version, record.created_at,
+                json.dumps(record.audit_refs), record.source.value, record.record_version, record.created_at, record.input_asset_id, record.runtime_source.value,
             ),
         )
         self._db.commit()
@@ -65,5 +65,5 @@ class JudgeAssessmentStore:
             tuple(json.loads(row["evidence_refs"])), tuple(json.loads(row["gate_refs"])),
             row["skill_id"], row["skill_version"], row["runtime_id"], row["runtime_version"],
             tuple(json.loads(row["audit_refs"])), AssessmentRecordSource(row["source"]),
-            row["record_version"], row["assessment_id"], row["created_at"],
+            row["record_version"], row["assessment_id"], row["created_at"], row["input_asset_id"], JudgeRuntimeSource(row["runtime_source"]),
         )

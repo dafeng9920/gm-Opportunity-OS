@@ -13,6 +13,7 @@ from opportunity.assessments import (
     JudgeAssessmentRecord,
     JudgeAssessmentStore,
     JudgeInputHasher,
+    JudgeRuntimeSource,
 )
 from opportunity.gates.contracts import GateStatus, OpportunityGateResult, RuleResult
 from opportunity.judge import AssessmentRecommendation, JudgeAssessment, JudgeInput
@@ -50,7 +51,7 @@ class GovernanceTaskAssemblyTests(unittest.TestCase):
             JudgeInputHasher.hash(self.judge_input), self.candidate.id, self.assessment,
             (self.evidence.id,), ("demand@0.1",), "opportunity.judge", "v0.1",
             "STATIC_ONLY" if static else "runtime.future-judge", "STATIC_ONLY" if static else "1.0",
-            () if static else ("audit-future-1",), source, "0.1",
+            () if static else ("audit-future-1",), source, "0.1", runtime_source=JudgeRuntimeSource.STATIC_ONLY if static else JudgeRuntimeSource.LLM_RUNTIME,
         )
 
     def test_assembles_validated_task_from_persisted_runtime_record(self) -> None:

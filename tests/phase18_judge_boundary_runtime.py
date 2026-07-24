@@ -8,7 +8,7 @@ from opportunity.assessments import AssessmentRecordWriter, JudgeAssessmentStore
 from opportunity.evaluation.contracts import EvaluationFact, EvaluationFactCategory, FactVerification
 from opportunity.fact_quality import AcceptedFact
 from opportunity.gate_evaluation import GateAssessmentAssetStore, GateAssessmentAssetWriter, MultiFactGateEvaluator
-from opportunity.judge import GateAssessmentJudgeInputAssembler, StaticJudgeAssessmentRuntime
+from opportunity.judge import GateAssessmentJudgeInputAssembler, JudgeRuntimeAdapter, StaticJudgeAssessmentRuntime
 
 
 class _AcceptedLookup:
@@ -44,7 +44,7 @@ def main() -> None:
     gate_asset = GateAssessmentAssetWriter(gate_asset_store, candidates, lookup).append(gate_record)
     judge_input = GateAssessmentJudgeInputAssembler(candidates, EvidenceReferenceValidator(ledger), lookup, gate_asset_store).assemble(gate_asset)
     assessment_store = JudgeAssessmentStore(database)
-    assessment_record = StaticJudgeAssessmentRuntime(AssessmentRecordWriter(assessment_store)).assess(judge_input)
+    assessment_record = JudgeRuntimeAdapter(GateAssessmentJudgeInputAssembler(candidates, EvidenceReferenceValidator(ledger), lookup, gate_asset_store), AssessmentRecordWriter(assessment_store), StaticJudgeAssessmentRuntime()).assess(gate_asset)
     if assessment_store.get(assessment_record.assessment_id) != assessment_record:
         raise RuntimeError('static assessment record did not persist')
     print(f'Phase 18.13 runtime verified: gate={gate_asset.assessment_status}, gate_asset={gate_asset.asset_id}, assessment_source={assessment_record.source}, runtime={assessment_record.runtime_id}')

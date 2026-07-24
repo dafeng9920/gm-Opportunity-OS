@@ -10,7 +10,7 @@ from opportunity.evaluation.contracts import EvaluationFact, EvaluationFactCateg
 from opportunity.fact_quality import AcceptedFact
 from opportunity.facts import ProducedGateFact
 from opportunity.gate_evaluation import GateAssessmentAssetStore, GateAssessmentAssetWriter, MultiFactGateEvaluator
-from opportunity.judge import GateAssessmentJudgeInputAssembler, StaticJudgeAssessmentRuntime
+from opportunity.judge import GateAssessmentJudgeInputAssembler, JudgeRuntimeAdapter, StaticJudgeAssessmentRuntime
 
 
 class _AcceptedLookup:
@@ -55,7 +55,7 @@ class JudgeBoundaryFoundationTests(unittest.TestCase):
         self.assertEqual(judge_input.candidate.id, self.candidate.id)
         self.assertEqual(tuple(item.id for item in judge_input.evidence), self.candidate.evidence_ids)
         store = JudgeAssessmentStore(self.database)
-        record = StaticJudgeAssessmentRuntime(AssessmentRecordWriter(store)).assess(judge_input)
+        record = JudgeRuntimeAdapter(self.assembler, AssessmentRecordWriter(store), StaticJudgeAssessmentRuntime()).assess(self.asset)
         self.assertEqual(record.source, AssessmentRecordSource.STATIC_TEST_ONLY)
         self.assertEqual(record.runtime_id, 'STATIC_ONLY')
         self.assertEqual(store.get(record.assessment_id), record)

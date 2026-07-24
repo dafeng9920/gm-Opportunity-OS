@@ -1,4 +1,4 @@
-﻿"""Immutable, versioned asset contracts for future Judge execution output."""
+"""Immutable, versioned asset contracts for future Judge execution output."""
 
 from __future__ import annotations
 
@@ -21,6 +21,13 @@ def now() -> str:
 class AssessmentRecordSource(StrEnum):
     FUTURE_JUDGE_RUNTIME = "FUTURE_JUDGE_RUNTIME"
     STATIC_TEST_ONLY = "STATIC_TEST_ONLY"
+
+
+class JudgeRuntimeSource(StrEnum):
+    STATIC_ONLY = 'STATIC_ONLY'
+    LLM_RUNTIME = 'LLM_RUNTIME'
+    HUMAN_REVIEW = 'HUMAN_REVIEW'
+    TRIAD_REVIEW = 'TRIAD_REVIEW'
 
 
 class JudgeInputHasher:
@@ -51,12 +58,14 @@ class JudgeAssessmentRecord:
     record_version: str
     assessment_id: str = field(default_factory=lambda: str(uuid4()))
     created_at: str = field(default_factory=now)
+    input_asset_id: str = "LEGACY_UNBOUND"
+    runtime_source: JudgeRuntimeSource = JudgeRuntimeSource.STATIC_ONLY
 
     def __post_init__(self) -> None:
         required = (
             self.assessment_id, self.judge_input_hash, self.candidate_id, self.skill_id,
             self.skill_version, self.runtime_id, self.runtime_version, self.record_version,
-            self.created_at,
+            self.created_at, self.input_asset_id,
         )
         if not all(isinstance(item, str) and item.strip() for item in required):
             raise ValueError("assessment record identity is required")
@@ -66,6 +75,8 @@ class JudgeAssessmentRecord:
             raise ValueError("assessment record version must be major.minor")
         if not isinstance(self.assessment, JudgeAssessment):
             raise ValueError("assessment record requires JudgeAssessment payload")
+        if not isinstance(self.runtime_source, JudgeRuntimeSource):
+            raise ValueError("assessment runtime source is invalid")
         if not isinstance(self.source, AssessmentRecordSource):
             raise ValueError("assessment record source is invalid")
         for refs, name in ((self.evidence_refs, "evidence"), (self.gate_refs, "gate"), (self.audit_refs, "audit")):
@@ -96,10 +107,10 @@ class JudgeAssessmentRecordValidator:
         if not set(record.assessment.gate_refs).issubset(record.gate_refs):
             raise ValueError("assessment payload gate refs are outside record lineage")
         if record.source is AssessmentRecordSource.STATIC_TEST_ONLY:
-            if record.runtime_id != "STATIC_ONLY" or record.runtime_version != "STATIC_ONLY":
+            if record.runtime_source is not JudgeRuntimeSource.STATIC_ONLY or record.runtime_id != "STATIC_ONLY" or record.runtime_version != "STATIC_ONLY":
                 raise ValueError("static assessment records must declare STATIC_ONLY runtime metadata")
         elif record.source is AssessmentRecordSource.FUTURE_JUDGE_RUNTIME:
-            if record.runtime_id in {"FUTURE_PENDING", "STATIC_ONLY"} or record.runtime_version in {"FUTURE_PENDING", "STATIC_ONLY"}:
+            if record.runtime_source is JudgeRuntimeSource.STATIC_ONLY or record.runtime_id in {"FUTURE_PENDING", "STATIC_ONLY"} or record.runtime_version in {"FUTURE_PENDING", "STATIC_ONLY"}:
                 raise ValueError("future judge runtime records require concrete runtime metadata")
             if not record.audit_refs:
                 raise ValueError("future judge runtime records require audit references")

@@ -39,18 +39,18 @@ def _role(role_id: str) -> TriadRoleContract:
     )
 
 
-def _role_assessment(role_id: str, input_asset_id: str = "asset-1") -> RoleAssessmentRecord:
+def _role_assessment(role_id: str, input_asset_id: str = "asset-1", candidate_id: str = "candidate-1") -> RoleAssessmentRecord:
     return RoleAssessmentRecord(
-        f"{role_id}-assessment",
-        role_id,
-        input_asset_id,
-        f"judge-{role_id}",
-        JudgeRuntimeSource.STATIC_ONLY,
-        AssessmentRecommendation.SMALL_SCALE_VALIDATION.value,
-        ("input-hash",),
-        "0.1",
+        role_assessment_id=f"{role_id}-assessment",
+        role_id=role_id,
+        candidate_id=candidate_id,
+        input_asset_id=input_asset_id,
+        judge_assessment_id=f"judge-{role_id}",
+        runtime_source=JudgeRuntimeSource.STATIC_ONLY,
+        assessment_result=AssessmentRecommendation.SMALL_SCALE_VALIDATION.value,
+        provenance=("input-hash",),
+        version="0.1",
     )
-
 
 def _judge_record(*, input_asset_id: str = "LEGACY_UNBOUND") -> JudgeAssessmentRecord:
     assessment = JudgeAssessment(
@@ -124,14 +124,11 @@ class TriadEvaluationAssemblerTests(unittest.TestCase):
 
     def test_role_assessment_with_foreign_input_asset_is_rejected(self) -> None:
         foreign = RoleAssessmentRecord(
-            "foreign-assessment",
-            "discovery",
-            "other-asset",  # different input_asset_id
-            "judge-discovery",
-            JudgeRuntimeSource.STATIC_ONLY,
-            AssessmentRecommendation.SMALL_SCALE_VALIDATION.value,
-            ("input-hash",),
-            "0.1",
+            role_assessment_id="foreign-assessment", role_id="discovery", candidate_id="candidate-1",
+            input_asset_id="other-asset", judge_assessment_id="judge-discovery",
+            runtime_source=JudgeRuntimeSource.STATIC_ONLY,
+            assessment_result=AssessmentRecommendation.SMALL_SCALE_VALIDATION.value,
+            provenance=("input-hash",), version="0.1",
         )
         with self.assertRaisesRegex(ValueError, "role assessment scope mismatch"):
             self.assembler.assemble("candidate-1", "asset-1", self.roles, (foreign,))

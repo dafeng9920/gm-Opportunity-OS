@@ -1,8 +1,16 @@
 # Opportunity OS
 
-The minimal, business-agnostic foundation for turning external signals into evidence-backed candidate packets and handing them to the next responsible component.
+An evidence-driven, governed opportunity pipeline: external signals become hashed evidence, evidence becomes versioned facts, facts feed deterministic gates and a judge boundary, and accepted assessments produce governed evaluation artifacts.
 
-This v0.1 intentionally includes no crawler, agent framework, business plugin, content generation, revenue analysis, or Hermes integration.
+The **core is minimal and business-agnostic**; real capabilities 鈥?collectors, domain plugins, evaluation 鈥?enter one explicit, tested boundary at a time. There is **no real LLM/Agent runtime yet** (the judge layer is deterministic/static), no content generation, no revenue analysis, and no Hermes integration.
+
+## Pipeline
+
+```
+external signal -> Evidence (SHA-256) -> governed Facts -> Gate Assessment -> Judge boundary -> Triad evaluation -> Governed evaluation artifact
+```
+
+Each arrow is an explicit boundary with its own contract doc and tests. Controlled capabilities already in: a narrow **YouTube RSS** real collector ([real-signal-source-layer](docs/real-signal-source-layer.md)) and an assessment-only **roblox** domain plugin ([opportunity/domains/roblox](opportunity/domains/roblox)).
 
 ## Run the verified example
 

@@ -59,3 +59,7 @@ Gate Assessment results become append-only assets before the Judge layer. A pers
 ## Judge Runtime Adapter Foundation v0.1
 
 A Judge Runtime receives only a persisted GateAssessmentAsset through JudgeRuntimeAdapter and produces a provenance-bound JudgeAssessmentRecord. Static output remains explicitly STATIC_TEST_ONLY; see [docs/judge-runtime-adapter-foundation.md](judge-runtime-adapter-foundation.md).
+
+## Triad Decision Artifact Foundation v0.1
+
+A persisted Opportunity Evaluation Triad artifact is built only from reloaded RoleAssessmentStore records. It is an append-only multi-perspective governance asset, not a final OpportunityDecision; see [docs/triad-decision-artifact-foundation.md](triad-decision-artifact-foundation.md).

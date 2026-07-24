@@ -1,87 +1,39 @@
-import ast
-import sqlite3
 import unittest
 from pathlib import Path
-from types import MappingProxyType
+from uuid import uuid4
+from opportunity.assessments import JudgeRuntimeSource
+from opportunity.triad_evaluation import RoleAssessmentRecord, TriadEvaluationAssembler, TriadRoleContract
+from opportunity.triad_evaluation.store import RoleAssessmentStore
+from opportunity.triad_evaluation.decision_store import TriadDecisionStore
+from opportunity.triad_evaluation.decision_writer import TriadDecisionArtifactWriter
+from opportunity.triad_evaluation.decisions import AgreementStatus,TriadDecisionStatus
+class Tests(unittest.TestCase):
+ def setUp(self):
+  self.db=Path('.opportunity-os')/f'triad-decision-{self._testMethodName}.db'; self.db.unlink(missing_ok=True); self.roles=tuple(TriadRoleContract(x,x,('asset',),('asset',),('raw',),'role','0.1') for x in ('discovery','skeptic','commercial')); self.rs=RoleAssessmentStore(self.db); self.ds=TriadDecisionStore(self.db); self.a=TriadEvaluationAssembler(); self.w=TriadDecisionArtifactWriter(self.rs,self.ds)
+ def rec(self,role,result='SUPPORT',candidate='c',asset='a'): return RoleAssessmentRecord(role+'-'+str(uuid4()),role,candidate,asset,'judge-'+role,JudgeRuntimeSource.STATIC_ONLY,result,('hash',),'0.1')
+ def context(self,items): return self.a.assemble('c','a',self.roles,items)
+ def test_consensus_and_roundtrip(self):
+  items=tuple(self.rec(x.role_id) for x in self.roles); [self.rs.append(x) for x in items]; out=self.w.write(self.context(items)); self.assertEqual((out.agreement_status,out.decision_status),(AgreementStatus.CONSENSUS,TriadDecisionStatus.READY)); self.assertEqual(self.ds.get(out.artifact_id),out); self.assertEqual(self.ds.list_by_candidate('c'),[out])
+ def test_missing_conflict_and_unpersisted(self):
+  two=(self.rec('discovery'),self.rec('skeptic')); [self.rs.append(x) for x in two]; self.assertEqual(self.w.write(self.context(two)).decision_status,TriadDecisionStatus.UNKNOWN)
+  items=(self.rec('discovery','SUPPORT'),self.rec('skeptic','REJECT'),self.rec('commercial','SUPPORT')); [self.rs.append(x) for x in items]; self.assertEqual(self.w.write(self.context(items)).decision_status,TriadDecisionStatus.REVIEW_REQUIRED)
+  un=(self.rec('discovery'),); self.assertRaisesRegex(ValueError,'unpersisted',self.w.write,self.context(un))
+ def test_append_only_and_mismatch(self):
+  self.assertFalse(hasattr(self.ds,'update')); self.assertFalse(hasattr(self.ds,'delete'))
+  bad=self.rec('discovery',candidate='other'); self.rs.append(bad); self.assertRaisesRegex(ValueError,'scope mismatch',self.context,(bad,))
+ def test_input_asset_and_legacy_are_rejected(self):
+  foreign = self.rec('discovery', asset='other')
+  self.rs.append(foreign)
+  with self.assertRaisesRegex(ValueError, 'scope mismatch'):
+      self.a.assemble('c', 'a', self.roles, (foreign,))
+  with self.assertRaises(ValueError):
+      RoleAssessmentRecord('legacy','discovery','','','judge',JudgeRuntimeSource.STATIC_ONLY,'SUPPORT',(), '0.1')
 
-from governance.triad.contracts import GateDecision, GateDecisionRecord, GovernanceTask, Role, RoleArtifact
-from governance.triad.decisions import (
-    DecisionArtifactSource,
-    GovernanceSnapshotFactory,
-    TriadDecisionArtifact,
-    TriadDecisionStore,
-    TriadDecisionWriter,
-)
+ def test_duplicate_artifact_identity_rejected(self):
+  items = tuple(self.rec(x.role_id) for x in self.roles)
+  [self.rs.append(x) for x in items]
+  artifact = self.w.write(self.context(items))
+  with self.assertRaises(Exception):
+      self.ds.append(artifact)
 
-
-class TriadDecisionArtifactTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.database = Path(".opportunity-os") / f"triad-decision-artifact-{self._testMethodName}.db"
-        if self.database.exists():
-            self.database.unlink()
-        self.store = TriadDecisionStore(self.database)
-        self.writer = TriadDecisionWriter(self.store)
-        self.task = GovernanceTask(
-            "governance-1", "govern admission", ("assessment-1",), "gate decision",
-            metadata=MappingProxyType({"assessment_id": "assessment-1"}), candidate_id="candidate-1",
-        )
-        self.roles = (
-            RoleArtifact("governance-1", Role.EXECUTION, "execution", input_refs=("assessment-1",)),
-            RoleArtifact("governance-1", Role.REVIEW, "review", input_refs=("assessment-1",)),
-            RoleArtifact("governance-1", Role.COMPLIANCE, "compliance", input_refs=("assessment-1",)),
-        )
-
-    def artifact(self, source: DecisionArtifactSource = DecisionArtifactSource.STATIC_TEST_ONLY) -> TriadDecisionArtifact:
-        return TriadDecisionArtifact(
-            "governance-1", "candidate-1", "assessment-1",
-            GateDecisionRecord("governance-1", GateDecision.ALLOW, "validated", Role.COMPLIANCE),
-            self.roles, () if source is DecisionArtifactSource.STATIC_TEST_ONLY else ("triad-audit-1",), source, "0.1",
-        )
-
-    def test_writer_persists_append_only_validated_runtime_artifact(self) -> None:
-        artifact = self.artifact(DecisionArtifactSource.FUTURE_TRIAD_RUNTIME)
-        self.writer.append(artifact, self.task)
-        self.assertEqual(self.store.get(artifact.decision_artifact_id), artifact)
-        self.assertEqual(self.store.list(), [artifact])
-        with self.assertRaises(sqlite3.IntegrityError):
-            self.writer.append(artifact, self.task)
-        self.assertFalse(hasattr(self.store, "update"))
-        self.assertFalse(hasattr(self.store, "delete"))
-
-    def test_static_artifact_requires_explicit_test_mode(self) -> None:
-        artifact = self.artifact()
-        with self.assertRaises(PermissionError):
-            self.writer.append(artifact, self.task)
-        self.writer.append(artifact, self.task, test_mode=True)
-        with self.assertRaises(PermissionError):
-            GovernanceSnapshotFactory(self.store).create(artifact.decision_artifact_id)
-        snapshot = GovernanceSnapshotFactory(self.store).create(artifact.decision_artifact_id, test_mode=True)
-        self.assertEqual(snapshot.decision, GateDecision.ALLOW)
-        self.assertEqual(snapshot.decision_artifact_id, artifact.decision_artifact_id)
-
-    def test_writer_rejects_task_lineage_and_incomplete_role_chain(self) -> None:
-        artifact = self.artifact(DecisionArtifactSource.FUTURE_TRIAD_RUNTIME)
-        wrong_task = GovernanceTask("other", "govern admission", ("assessment-1",), "gate decision", candidate_id="candidate-1")
-        with self.assertRaisesRegex(ValueError, "task"):
-            self.writer.append(artifact, wrong_task)
-        incomplete = TriadDecisionArtifact(
-            "governance-1", "candidate-1", "assessment-1", artifact.decision,
-            self.roles[:-1], ("triad-audit-1",), DecisionArtifactSource.FUTURE_TRIAD_RUNTIME, "0.1",
-        )
-        with self.assertRaises(ValueError):
-            self.writer.append(incomplete, self.task)
-
-    def test_snapshot_factory_requires_persisted_artifact(self) -> None:
-        with self.assertRaises(KeyError):
-            GovernanceSnapshotFactory(self.store).create("missing")
-
-    def test_decision_asset_boundary_has_no_runtime_executor_or_packet_assembler_dependency(self) -> None:
-        for path in (
-            "governance/triad/decisions/contracts.py",
-            "governance/triad/decisions/store.py",
-            "governance/triad/decisions/writer.py",
-        ):
-            tree = ast.parse(Path(path).read_text(encoding="utf-8-sig"))
-            imports = [node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)]
-            for forbidden in ("runtime", "governance.triad.dispatch", "opportunity.packets", "skills", "adapters", "crawlers"):
-                self.assertNotIn(forbidden, imports)
+if __name__=='__main__': unittest.main()

@@ -34,4 +34,8 @@ The first real Fact producer measures `available_sources@0.1` from persisted Evi
 
 ## Keyword Difficulty Fact Producer v0.1
 
-keyword_difficulty@0.1 is a reproducible calculation from persisted structured SERP Evidence, not an external API truth claim. See [docs/keyword-difficulty-producer.md](keyword-difficulty-producer.md).
+`keyword_difficulty@0.1` is a reproducible calculation from persisted structured SERP Evidence, not an external API truth claim. See [docs/keyword-difficulty-producer.md](keyword-difficulty-producer.md).
+
+## Long Tail Count Fact Producer v0.1
+
+`long_tail_count@0.1` is a reproducible count from persisted structured keyword-corpus Evidence, not a manual total. See [docs/long-tail-count-producer.md](long-tail-count-producer.md).

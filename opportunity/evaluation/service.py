@@ -1,5 +1,4 @@
-﻿"""Evaluate a persisted Candidate through Ledger-backed context and the stable Gate Engine."""
-
+"""Evaluate a persisted Candidate through governed Fact production outputs and the stable Gate Engine."""
 from __future__ import annotations
 
 from candidates.repository import CandidateRepository
@@ -11,16 +10,7 @@ from .resolver import EvidenceResolver
 
 
 class CandidateEvaluationService:
-    """The controlled Candidate-to-Gate boundary; it has no Judge, Triad, or Packet role."""
-
-    def __init__(
-        self,
-        candidates: CandidateRepository,
-        resolver: EvidenceResolver,
-        gates: OpportunityGateEngine,
-        supported_domains: tuple[str, ...],
-        adapter: EvaluationGateAdapter | None = None,
-    ) -> None:
+    def __init__(self, candidates: CandidateRepository, resolver: EvidenceResolver, gates: OpportunityGateEngine, supported_domains: tuple[str, ...], adapter: EvaluationGateAdapter | None = None) -> None:
         if not supported_domains or not all(isinstance(domain, str) and domain.strip() for domain in supported_domains):
             raise ValueError("supported evaluation domains are required")
         self._candidates = candidates
@@ -37,5 +27,4 @@ class CandidateEvaluationService:
             raise KeyError("candidate not found")
         context = self._resolver.resolve(candidate, domain)
         gate_input = self._adapter.to_gate_input(context)
-        assessment = self._gates.assess(candidate, gate_input.as_mapping())
-        return CandidateEvaluationResult(candidate.id, context, gate_input, assessment)
+        return CandidateEvaluationResult(candidate.id, context, gate_input, self._gates.assess(candidate, gate_input.as_mapping()))

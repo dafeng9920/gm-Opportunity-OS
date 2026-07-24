@@ -1,4 +1,4 @@
-﻿"""Assemble trusted JudgeInput only from one Evidence-backed CandidateEvaluationResult."""
+"""Assemble trusted JudgeInput only from one Evidence-backed CandidateEvaluationResult."""
 
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ class JudgeInputAssembler:
             fact = facts.get(field.fact_id)
             if fact is None:
                 raise ValueError("gate input field has no evaluation fact")
-            if field.value != fact.value or field.evidence_ids != fact.evidence_ids:
+            if field.value != fact.value or field.evidence_ids != fact.evidence_ids or field.fact_version != fact.fact_version:
                 raise ValueError("gate input field does not match evaluation fact lineage")
 
     @staticmethod

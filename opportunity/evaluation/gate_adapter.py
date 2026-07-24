@@ -1,4 +1,4 @@
-﻿"""Adapt verified Evaluation Context facts to the unchanged generic Gate input mapping."""
+"""Adapt verified Evaluation Context facts to the unchanged generic Gate input mapping."""
 
 from __future__ import annotations
 
@@ -9,10 +9,11 @@ from .contracts import (
     GateInputField,
     GateInputMapping,
 )
+from .fact_validator import GateFactValidator
 
 
 class EvaluationGateAdapter:
-    """Only verified facts with matching category may become Gate inputs."""
+    """Only definition-validated facts may become Gate inputs."""
 
     REQUIRED_FIELDS = {
         "trend_up": EvaluationFactCategory.DEMAND,
@@ -22,12 +23,16 @@ class EvaluationGateAdapter:
         "monetization_path": EvaluationFactCategory.MONETIZATION,
     }
 
+    def __init__(self, fact_validator: GateFactValidator | None = None) -> None:
+        self._fact_validator = fact_validator or GateFactValidator()
+
     def to_gate_input(self, context: EvaluationContext) -> GateInputMapping:
         by_fact = {}
         for fact in context.facts:
             if fact.verification is not FactVerification.EVIDENCE_BACKED:
                 continue
             if fact.fact_id in self.REQUIRED_FIELDS:
+                self._fact_validator.validate(fact)
                 if fact.fact_id in by_fact:
                     raise ValueError(f"duplicate verified evaluation fact: {fact.fact_id}")
                 if fact.category is not self.REQUIRED_FIELDS[fact.fact_id]:
@@ -37,7 +42,13 @@ class EvaluationGateAdapter:
         if missing:
             raise ValueError("evaluation context is missing verified gate facts: " + ", ".join(missing))
         fields = tuple(
-            GateInputField(field, by_fact[field].value, by_fact[field].fact_id, by_fact[field].evidence_ids)
+            GateInputField(
+                field,
+                by_fact[field].value,
+                by_fact[field].fact_id,
+                by_fact[field].evidence_ids,
+                by_fact[field].fact_version,
+            )
             for field in self.REQUIRED_FIELDS
         )
         return GateInputMapping(context.candidate_id, fields)

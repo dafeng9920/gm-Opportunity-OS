@@ -1,4 +1,4 @@
-﻿"""Immutable Evidence-backed evaluation contracts; they do not make opportunity decisions."""
+"""Immutable Evidence-backed evaluation contracts; they do not make opportunity decisions."""
 
 from __future__ import annotations
 
@@ -46,10 +46,12 @@ class EvaluationFact:
     evidence_ids: tuple[str, ...]
     confidence: float
     verification: FactVerification = FactVerification.EVIDENCE_BACKED
+    fact_version: str = "0.1"
+    provenance: Mapping[str, Any] = field(default_factory=dict)
     created_at: str = field(default_factory=now)
 
     def __post_init__(self) -> None:
-        if not self.fact_id or not isinstance(self.evidence_ids, tuple) or not self.evidence_ids or not self.created_at:
+        if not self.fact_id or not self.fact_version or not isinstance(self.evidence_ids, tuple) or not self.evidence_ids or not self.created_at:
             raise ValueError("evaluation fact identity and evidence references are required")
         if not isinstance(self.category, EvaluationFactCategory):
             raise ValueError("evaluation fact category is invalid")
@@ -59,7 +61,13 @@ class EvaluationFact:
             raise ValueError("evaluation fact evidence ids are invalid")
         if not isinstance(self.confidence, (int, float)) or not 0 <= self.confidence <= 1:
             raise ValueError("evaluation fact confidence must be between 0 and 1")
+        if not isinstance(self.provenance, Mapping):
+            raise ValueError("evaluation fact provenance must be a mapping")
         object.__setattr__(self, "value", _freeze(self.value))
+        object.__setattr__(self, "provenance", _freeze(dict(self.provenance)))
+        if self.verification is FactVerification.EVIDENCE_BACKED:
+            from .fact_validator import GateFactValidator
+            GateFactValidator().validate(self)
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,9 +97,10 @@ class GateInputField:
     value: Any
     fact_id: str
     evidence_ids: tuple[str, ...]
+    fact_version: str = "0.1"
 
     def __post_init__(self) -> None:
-        if not self.field or not self.fact_id or not isinstance(self.evidence_ids, tuple) or not self.evidence_ids:
+        if not self.field or not self.fact_id or not self.fact_version or not isinstance(self.evidence_ids, tuple) or not self.evidence_ids:
             raise ValueError("gate input field lineage is required")
         object.__setattr__(self, "value", _freeze(self.value))
 

@@ -11,3 +11,15 @@ Candidate packets reference the ledger through non-empty, unique `evidence_ids`.
 ## Handoff
 
 Moving a candidate into `HANDOFF` must be accompanied by a `HandoffItem` written to the local queue. Each item tracks producer, consumer, candidate, time, and queue status.
+
+## Gate Facts v0.1
+
+Gate evaluation inputs are versioned facts, distinct from raw Evidence and Gate decisions. See [docs/gate-fact-contracts.md](gate-fact-contracts.md).
+
+## Fact Production Boundary v0.1
+
+Collectors persist raw Evidence only. Registered Fact Producers create persisted, validated Gate Facts from that Evidence; see [docs/fact-production-boundary.md](fact-production-boundary.md).
+
+## Fact Quality Boundary v0.1
+
+Produced Facts are not Gate inputs until an independent deterministic quality assessment accepts them; see [docs/fact-quality-boundary.md](fact-quality-boundary.md).

@@ -1,13 +1,14 @@
-﻿import ast
+import ast
 import unittest
 from pathlib import Path
 
 from candidates import CandidateFormationRequest, CandidateFormationService, CandidateRepository, EvidenceReferenceValidator
 from core.schemas import EvidenceObject
 from evidence import EvidenceLedger
-from opportunity.evaluation import CandidateEvaluationService, EvidenceResolver, FactVerification, FactVerification
+from opportunity.evaluation import CandidateEvaluationService, EvidenceResolver, FactVerification
 from opportunity.gates import OpportunityGateEngine
 from opportunity.judge import JudgeInputAssembler
+from tests.fact_test_support import produce_all
 
 
 class JudgeInputAssemblyTests(unittest.TestCase):
@@ -26,27 +27,37 @@ class JudgeInputAssemblyTests(unittest.TestCase):
         self.ledger = EvidenceLedger(self.database)
         self.evidence = []
         for fact_id, category, value in self.FACTS:
+            references = tuple(item.id for item in self.evidence[:2]) if fact_id == "available_sources" else None
             item = EvidenceObject(
                 "fixture", "fact", f"https://example.test/{fact_id}",
-                metadata={"evaluation_facts": [{"fact_id": fact_id, "category": category, "value": value}]},
+                metadata={"evaluation_facts": [self._fact(fact_id, category, value, references)]},
             )
             self.ledger.append(item)
             self.evidence.append(item)
+        self.fact_store = produce_all(self.ledger, self.database, self.evidence)
         self.repository = CandidateRepository(self.database)
-        formation = CandidateFormationService(
-            EvidenceReferenceValidator(self.ledger), self.repository, ("roblox",)
-        )
+        formation = CandidateFormationService(EvidenceReferenceValidator(self.ledger), self.repository, ("roblox",))
         self.candidate = formation.form(CandidateFormationRequest(
             "roblox", "Fixture Game", tuple(item.id for item in self.evidence), "human.fixture", "0.1"
         )).candidate_packet
-        evaluation = CandidateEvaluationService(
-            self.repository,
-            EvidenceResolver(EvidenceReferenceValidator(self.ledger)),
-            OpportunityGateEngine(),
-            ("roblox",),
-        )
-        self.result = evaluation.evaluate(self.candidate.id, "roblox")
+        self.result = self._fresh_result()
         self.assembler = JudgeInputAssembler(self.repository, EvidenceReferenceValidator(self.ledger))
+
+    @staticmethod
+    def _provenance(fact_id: str) -> dict[str, str]:
+        return {
+            "trend_up": {"query": "fixture", "region": "US", "time_window": "7d", "source": "fixture", "method": "fixture-v1", "captured_at": "2026-01-01"},
+            "keyword_difficulty": {"query": "fixture", "source": "fixture", "method": "fixture-v1", "captured_at": "2026-01-01"},
+            "long_tail_count": {"query_family": "fixture", "source": "fixture", "method": "fixture-v1", "captured_at": "2026-01-01"},
+            "available_sources": {"source_inventory": "fixture", "method": "fixture-v1", "captured_at": "2026-01-01"},
+            "monetization_path": {"path_scope": "site", "source": "fixture", "method": "fixture-v1", "captured_at": "2026-01-01"},
+        }[fact_id]
+
+    def _fact(self, fact_id: str, category: str, value: object, references: tuple[str, ...] | None) -> dict[str, object]:
+        fact: dict[str, object] = {"fact_id": fact_id, "category": category, "value": value, "fact_version": "0.1", "provenance": self._provenance(fact_id)}
+        if references:
+            fact["evidence_ids"] = references
+        return fact
 
     def test_evaluation_result_assembles_validated_judge_input(self) -> None:
         packet = self.assembler.assemble(self.result)
@@ -73,8 +84,8 @@ class JudgeInputAssemblyTests(unittest.TestCase):
             self.assembler.assemble(self.result)
 
     def test_assembler_rejects_unverified_evaluation_fact(self) -> None:
-        object.__setattr__(self.result.context.facts[0], 'verification', FactVerification.UNVERIFIED_INPUT)
-        with self.assertRaisesRegex(ValueError, 'unverified'):
+        object.__setattr__(self.result.context.facts[0], "verification", FactVerification.UNVERIFIED_INPUT)
+        with self.assertRaisesRegex(ValueError, "unverified"):
             self.assembler.assemble(self.result)
 
     def test_assembler_rejects_gate_field_lineage_mismatch(self) -> None:
@@ -86,19 +97,13 @@ class JudgeInputAssemblyTests(unittest.TestCase):
     def test_assembler_has_no_judge_runner_agent_runtime_triad_packet_consumer_or_builder_dependencies(self) -> None:
         tree = ast.parse(Path("opportunity/judge/assembler.py").read_text(encoding="utf-8-sig"))
         imports = [node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)]
-        for forbidden in (
-            "opportunity.judge.runner", "runtime", "skills", "governance", "opportunity.packets",
-            "opportunity.consumers", "builders", "adapters", "crawlers",
-        ):
+        for forbidden in ("opportunity.judge.runner", "runtime", "skills", "governance", "opportunity.packets", "opportunity.consumers", "builders", "adapters", "crawlers"):
             self.assertNotIn(forbidden, imports)
 
     def _fresh_result(self):
-        evaluation = CandidateEvaluationService(
+        return CandidateEvaluationService(
             self.repository,
-            EvidenceResolver(EvidenceReferenceValidator(self.ledger)),
+            EvidenceResolver(EvidenceReferenceValidator(self.ledger), self.fact_store),
             OpportunityGateEngine(),
             ("roblox",),
-        )
-        return evaluation.evaluate(self.candidate.id, "roblox")
-
-
+        ).evaluate(self.candidate.id, "roblox")

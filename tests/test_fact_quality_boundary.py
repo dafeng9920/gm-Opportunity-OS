@@ -11,4 +11,4 @@ class FactQualityTests(unittest.TestCase):
   for i in range(5):
    e=EvidenceObject('fixture','raw',f'https://example.test/{i}'); ledger.append(e); items.append(e)
   store=produce_all(ledger,p,items)
-  self.assertEqual(len(store.list_for_evidence_ids(tuple(e.id for e in items))),5)
+  self.assertEqual(len(store.list_accepted_for_evidence_ids(tuple(e.id for e in items))),5)

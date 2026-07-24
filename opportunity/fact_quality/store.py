@@ -22,7 +22,7 @@ class FactQualityStore:
  def append_accepted(self,a):
   f=a.fact
   with self._session() as db: db.execute('INSERT INTO accepted_facts VALUES (?,?,?,?,?,?,?,?,?,?,?)',(a.accepted_fact_id,a.source_fact_id,a.quality_assessment_id,a.accepted_version,f.fact_id,f.category.value,json.dumps(f.value),json.dumps(f.evidence_ids),f.confidence,json.dumps(dict(f.provenance)),a.accepted_at))
- def list_for_evidence_ids(self,ids):
+ def list_accepted_for_evidence_ids(self,ids):
   allowed=set(ids)
   with self._session() as db: rows=db.execute('SELECT * FROM accepted_facts ORDER BY accepted_at,id').fetchall()
-  return tuple(EvaluationFact(r['fact_name'],EvaluationFactCategory(r['category']),json.loads(r['value']),tuple(json.loads(r['evidence_ids'])),r['confidence'],FactVerification.EVIDENCE_BACKED,r['version'],json.loads(r['provenance'])) for r in rows if set(json.loads(r['evidence_ids'])).issubset(allowed))
+  return tuple(AcceptedFact(r['id'],r['source_fact_id'],r['assessment_id'],r['version'],EvaluationFact(r['fact_name'],EvaluationFactCategory(r['category']),json.loads(r['value']),tuple(json.loads(r['evidence_ids'])),r['confidence'],FactVerification.EVIDENCE_BACKED,r['version'],json.loads(r['provenance'])),r['accepted_at']) for r in rows if set(json.loads(r['evidence_ids'])).issubset(allowed))

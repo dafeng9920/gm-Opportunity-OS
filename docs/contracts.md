@@ -51,3 +51,7 @@ Gate evaluation aggregates only Accepted Facts into a deterministic Gate Assessm
 ## Judge Boundary Foundation v0.1
 
 A Gate Assessment can become a strictly scoped JudgeInput only when its referenced Facts are Accepted Facts. Static Judge output is explicitly STATIC_TEST_ONLY, never a real Agent Runtime. See [docs/judge-boundary-foundation.md](judge-boundary-foundation.md).
+
+## Gate Assessment Asset Persistence v0.1
+
+Gate Assessment results become append-only assets before the Judge layer. A persisted GateAssessmentAsset binds the Candidate, Accepted Fact references, policy/version, deterministic Gate results, and status; see [docs/gate-assessment-asset-boundary.md](gate-assessment-asset-boundary.md).

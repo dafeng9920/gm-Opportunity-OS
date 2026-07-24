@@ -7,7 +7,7 @@ from evidence import EvidenceLedger
 from opportunity.assessments import AssessmentRecordWriter, JudgeAssessmentStore
 from opportunity.evaluation.contracts import EvaluationFact, EvaluationFactCategory, FactVerification
 from opportunity.fact_quality import AcceptedFact
-from opportunity.gate_evaluation import MultiFactGateEvaluator
+from opportunity.gate_evaluation import GateAssessmentAssetStore, GateAssessmentAssetWriter, MultiFactGateEvaluator
 from opportunity.judge import GateAssessmentJudgeInputAssembler, StaticJudgeAssessmentRuntime
 
 
@@ -40,12 +40,14 @@ def main() -> None:
     accepted = tuple(AcceptedFact(f'accepted-{index}', f'produced-{index}', f'quality-{index}', '0.1', fact) for index, fact in enumerate(facts, 1))
     lookup = _AcceptedLookup(accepted)
     gate_record = MultiFactGateEvaluator(lookup).evaluate(candidate)
-    judge_input = GateAssessmentJudgeInputAssembler(candidates, EvidenceReferenceValidator(ledger), lookup).assemble(gate_record)
+    gate_asset_store = GateAssessmentAssetStore(database)
+    gate_asset = GateAssessmentAssetWriter(gate_asset_store, candidates, lookup).append(gate_record)
+    judge_input = GateAssessmentJudgeInputAssembler(candidates, EvidenceReferenceValidator(ledger), lookup, gate_asset_store).assemble(gate_asset)
     assessment_store = JudgeAssessmentStore(database)
     assessment_record = StaticJudgeAssessmentRuntime(AssessmentRecordWriter(assessment_store)).assess(judge_input)
     if assessment_store.get(assessment_record.assessment_id) != assessment_record:
         raise RuntimeError('static assessment record did not persist')
-    print(f'Phase 18.13 runtime verified: gate={gate_record.overall_status}, assessment_source={assessment_record.source}, runtime={assessment_record.runtime_id}')
+    print(f'Phase 18.13 runtime verified: gate={gate_asset.assessment_status}, gate_asset={gate_asset.asset_id}, assessment_source={assessment_record.source}, runtime={assessment_record.runtime_id}')
 
 
 if __name__ == '__main__':

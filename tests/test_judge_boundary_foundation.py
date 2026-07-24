@@ -9,7 +9,7 @@ from opportunity.assessments import JudgeAssessmentStore, AssessmentRecordWriter
 from opportunity.evaluation.contracts import EvaluationFact, EvaluationFactCategory, FactVerification
 from opportunity.fact_quality import AcceptedFact
 from opportunity.facts import ProducedGateFact
-from opportunity.gate_evaluation import MultiFactGateEvaluator
+from opportunity.gate_evaluation import GateAssessmentAssetStore, GateAssessmentAssetWriter, MultiFactGateEvaluator
 from opportunity.judge import GateAssessmentJudgeInputAssembler, StaticJudgeAssessmentRuntime
 
 
@@ -31,7 +31,10 @@ class JudgeBoundaryFoundationTests(unittest.TestCase):
         self.accepted = self._accepted()
         self.lookup = _AcceptedLookup(self.accepted)
         self.gate_record = MultiFactGateEvaluator(self.lookup).evaluate(self.candidate)
-        self.assembler = GateAssessmentJudgeInputAssembler(self.candidates, EvidenceReferenceValidator(self.ledger), self.lookup)
+        self.asset_store = GateAssessmentAssetStore(self.database)
+        self.asset_writer = GateAssessmentAssetWriter(self.asset_store, self.candidates, self.lookup)
+        self.asset = self.asset_writer.append(self.gate_record)
+        self.assembler = GateAssessmentJudgeInputAssembler(self.candidates, EvidenceReferenceValidator(self.ledger), self.lookup, self.asset_store)
 
     def _fact(self, fact_id, category, value, evidence_ids, provenance):
         return EvaluationFact(fact_id, category, value, evidence_ids, 1.0, FactVerification.EVIDENCE_BACKED, '0.1', provenance)
@@ -48,7 +51,7 @@ class JudgeBoundaryFoundationTests(unittest.TestCase):
         return tuple(AcceptedFact(f'accepted-{index}', f'produced-{index}', f'quality-{index}', '0.1', fact) for index, fact in enumerate(facts, 1))
 
     def test_gate_assessment_becomes_scoped_judge_input_and_static_asset(self):
-        judge_input = self.assembler.assemble(self.gate_record)
+        judge_input = self.assembler.assemble(self.asset)
         self.assertEqual(judge_input.candidate.id, self.candidate.id)
         self.assertEqual(tuple(item.id for item in judge_input.evidence), self.candidate.evidence_ids)
         store = JudgeAssessmentStore(self.database)
@@ -57,15 +60,19 @@ class JudgeBoundaryFoundationTests(unittest.TestCase):
         self.assertEqual(record.runtime_id, 'STATIC_ONLY')
         self.assertEqual(store.get(record.assessment_id), record)
 
+    def test_runtime_gate_record_cannot_bypass_persisted_asset(self):
+        with self.assertRaisesRegex(TypeError, "requires GateAssessmentAsset"):
+            self.assembler.assemble(self.gate_record)
     def test_out_of_scope_fact_reference_is_rejected(self):
-        with self.assertRaisesRegex(ValueError, 'outside accepted fact scope'):
-            self.assembler.assemble(replace(self.gate_record, fact_refs=('not-accepted',)))
-
+        tampered = replace(self.asset, asset_id="persisted-tampered-asset", fact_refs=("not-accepted",))
+        self.asset_store.append(tampered)
+        with self.assertRaisesRegex(ValueError, "outside accepted fact scope"):
+            self.assembler.assemble(tampered)
     def test_produced_fact_cannot_enter_judge_scope(self):
         produced = ProducedGateFact('produced-injection', 'request', 'producer', '0.1', 'artifact', self.accepted[1].fact)
-        assembler = GateAssessmentJudgeInputAssembler(self.candidates, EvidenceReferenceValidator(self.ledger), _AcceptedLookup((produced,)))
+        assembler = GateAssessmentJudgeInputAssembler(self.candidates, EvidenceReferenceValidator(self.ledger), _AcceptedLookup((produced,)), self.asset_store)
         with self.assertRaisesRegex(TypeError, 'requires AcceptedFact'):
-            assembler.assemble(self.gate_record)
+            assembler.assemble(self.asset)
 
     def test_bridge_and_static_runtime_have_no_llm_agent_or_triad_dependencies(self):
         import ast

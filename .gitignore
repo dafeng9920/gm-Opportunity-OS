@@ -10,3 +10,8 @@ evaluations/hermes/source/
 # generated architecture diagrams — derived from registry/state machine, NEVER a second source of truth;
 # regenerate with `python -m tests.architecture_flow` (see CLAUDE.md §3.5)
 docs/generated/
+
+# secrets — local provider credentials (API keys), NEVER commit
+.env
+.env.local
+.env.*

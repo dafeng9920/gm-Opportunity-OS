@@ -63,3 +63,8 @@ A Judge Runtime receives only a persisted GateAssessmentAsset through JudgeRunti
 ## Triad Decision Artifact Foundation v0.1
 
 A persisted Opportunity Evaluation Triad artifact is built only from reloaded RoleAssessmentStore records. It is an append-only multi-perspective governance asset, not a final OpportunityDecision; see [docs/triad-decision-artifact-foundation.md](triad-decision-artifact-foundation.md).
+
+
+## Triad Identity Lifecycle v0.1
+
+Triad Workers remain white-state; invocation bindings temporarily grant role, skill, permission and context, then mandatory release removes them. See [docs/triad-identity-lifecycle.md](triad-identity-lifecycle.md).

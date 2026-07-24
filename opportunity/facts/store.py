@@ -74,3 +74,12 @@ class FactProductionStore:
                     row["fact_version"], json.loads(row["provenance"]),
                 ))
         return tuple(facts)
+    def get_produced(self, production_id: str) -> ProducedGateFact | None:
+        with self._session() as db:
+            row = db.execute("SELECT * FROM produced_gate_facts WHERE production_id = ?", (production_id,)).fetchone()
+        if row is None:
+            return None
+        return ProducedGateFact(
+            row["production_id"], row["request_id"], row["producer_id"], row["producer_version"], row["measurement_artifact_id"],
+            EvaluationFact(row["fact_id"], EvaluationFactCategory(row["category"]), json.loads(row["value"]), tuple(json.loads(row["evidence_ids"])), row["confidence"], FactVerification.EVIDENCE_BACKED, row["fact_version"], json.loads(row["provenance"])), row["created_at"],
+        )

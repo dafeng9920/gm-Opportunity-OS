@@ -22,6 +22,8 @@ class GovernanceSnapshot:
     decision: GateDecision | None
     audit_refs: tuple[str, ...]
     decision_artifact_id: str = ""
+    candidate_id: str = ""
+    assessment_id: str = ""
 @dataclass(frozen=True, slots=True)
 class OpportunityPacket:
     opportunity_id: str

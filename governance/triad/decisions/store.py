@@ -30,7 +30,7 @@ class TriadDecisionStore:
                 json.dumps({"decision": artifact.decision.decision.value, "rationale": artifact.decision.rationale,
                             "issued_by": artifact.decision.issued_by.value}),
                 json.dumps([{"task_id": item.task_id, "role": item.role.value, "summary": item.summary,
-                             "formal": item.formal, "input_refs": item.input_refs} for item in artifact.role_artifacts]),
+                             "formal": item.formal, "input_refs": item.input_refs, "audit_refs": item.audit_refs, "execution_id": item.execution_id, "candidate_id": item.candidate_id, "assessment_id": item.assessment_id} for item in artifact.role_artifacts]),
                 json.dumps(artifact.audit_refs), artifact.source.value, artifact.artifact_version, artifact.created_at,
             ),
         )
@@ -53,7 +53,7 @@ class TriadDecisionStore:
         return TriadDecisionArtifact(
             row["task_id"], row["candidate_id"], row["assessment_id"],
             GateDecisionRecord(row["task_id"], GateDecision(decision["decision"]), decision["rationale"], Role(decision["issued_by"])),
-            tuple(RoleArtifact(item["task_id"], Role(item["role"]), item["summary"], item["formal"], tuple(item["input_refs"])) for item in artifacts),
+            tuple(RoleArtifact(item["task_id"], Role(item["role"]), item["summary"], item["formal"], tuple(item["input_refs"]), tuple(item.get("audit_refs", ())), item.get("execution_id", ""), item.get("candidate_id", ""), item.get("assessment_id", "")) for item in artifacts),
             tuple(json.loads(row["audit_refs"])), DecisionArtifactSource(row["source"]), row["artifact_version"],
             row["decision_artifact_id"], row["created_at"],
         )

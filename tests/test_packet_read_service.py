@@ -1,4 +1,4 @@
-﻿import ast
+import ast
 import unittest
 from pathlib import Path
 from core.schemas import CandidatePacket, EvidenceObject
@@ -16,7 +16,7 @@ class PacketReadServiceTests(unittest.TestCase):
         evidence=EvidenceObject('test','signal','https://example.test/source'); self.candidate=CandidatePacket('Example','signal',(evidence.id,),'test',.5)
         gates=OpportunityGateEngine().assess(self.candidate, {'trend_up':True,'keyword_difficulty':20,'long_tail_count':20,'available_sources':('official','community'),'monetization_path':'ads'}).results
         judge=OpportunityJudgeRunner().assess(DeterministicJudgeAgent(),JudgeInput(self.candidate,(evidence,),gates))
-        self.packet=OpportunityPacketAssembler().assemble(domain='test-domain',candidate=self.candidate,evidence=(evidence,),gates=gates,judge=judge,governance=GovernanceSnapshot('REVIEWED',GateDecision.ALLOW,('audit-1',)),signals=('signal-1',),sources=('test',),discovery_time=evidence.captured_time)
+        self.packet=OpportunityPacketAssembler().assemble(domain='test-domain',candidate=self.candidate,evidence=(evidence,),gates=gates,judge=judge,governance=GovernanceSnapshot('REVIEWED',GateDecision.ALLOW,('audit-1',),'decision-fixture',self.candidate.id,'assessment-fixture'),signals=('signal-1',),sources=('test',),discovery_time=evidence.captured_time)
         self.store=OpportunityPacketStore(self.database); self.store.create(self.packet)
         registry=ConsumerRegistry(self.database); registry.register(ConsumerIdentity('consumer.reader',ConsumerType.SERVICE,'0.1'),ConsumerCapability('consumer.reader',(ConsumerAction.READ,),('0.1',),'test read','0.1'))
         self.reader=OpportunityPacketReader(ConsumerValidator(registry),self.store)

@@ -38,6 +38,10 @@ class RoleArtifact:
     summary: str
     formal: bool = True
     input_refs: tuple[str, ...] = ()
+    audit_refs: tuple[str, ...] = ()
+    execution_id: str = ""
+    candidate_id: str = ""
+    assessment_id: str = ""
 
 
 @dataclass(frozen=True)

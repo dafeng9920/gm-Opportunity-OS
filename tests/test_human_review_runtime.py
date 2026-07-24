@@ -1,4 +1,4 @@
-﻿import ast
+import ast
 import unittest
 from pathlib import Path
 
@@ -63,7 +63,7 @@ class HumanReviewRuntimeTests(unittest.TestCase):
             evidence=(evidence,),
             gates=gates,
             judge=judge,
-            governance=GovernanceSnapshot("REVIEWED", GateDecision.ALLOW, ("audit-1",)),
+            governance=GovernanceSnapshot("REVIEWED", GateDecision.ALLOW, ("audit-1",), "decision-fixture", self.candidate.id, "assessment-fixture"),
             signals=("signal-1",),
             sources=("test",),
             discovery_time=evidence.captured_time,

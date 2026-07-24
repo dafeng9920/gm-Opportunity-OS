@@ -18,4 +18,4 @@ class GovernanceSnapshotFactory:
             raise KeyError(f"decision artifact not found: {decision_artifact_id}")
         if artifact.source is DecisionArtifactSource.STATIC_TEST_ONLY and not test_mode:
             raise PermissionError("static-only decision artifacts require explicit test mode")
-        return GovernanceSnapshot("REVIEWED", artifact.decision.decision, artifact.audit_refs, artifact.decision_artifact_id)
+        return GovernanceSnapshot("REVIEWED", artifact.decision.decision, artifact.audit_refs, artifact.decision_artifact_id, artifact.candidate_id, artifact.assessment_id)

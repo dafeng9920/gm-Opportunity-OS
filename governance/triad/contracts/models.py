@@ -28,6 +28,7 @@ class GovernanceTask:
     expected_output: str
     scope: str = "admission"
     metadata: Mapping[str, str] = field(default_factory=dict)
+    candidate_id: str = ""
 
 
 @dataclass(frozen=True)

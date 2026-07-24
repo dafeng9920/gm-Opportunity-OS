@@ -1,4 +1,4 @@
-﻿"""Canonical immutable output contract for an evaluated opportunity."""
+"""Canonical immutable output contract for an evaluated opportunity."""
 from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
@@ -21,6 +21,7 @@ class GovernanceSnapshot:
     status: str
     decision: GateDecision | None
     audit_refs: tuple[str, ...]
+    decision_artifact_id: str = ""
 @dataclass(frozen=True, slots=True)
 class OpportunityPacket:
     opportunity_id: str

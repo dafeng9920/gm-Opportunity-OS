@@ -23,3 +23,7 @@ Collectors persist raw Evidence only. Registered Fact Producers create persisted
 ## Fact Quality Boundary v0.1
 
 Produced Facts are not Gate inputs until an independent deterministic quality assessment accepts them; see [docs/fact-quality-boundary.md](fact-quality-boundary.md).
+
+## Deterministic Source Inventory Producer v0.1
+
+The first real Fact producer measures `available_sources@0.1` from persisted Evidence only. It emits a Measurement Artifact; it does not bypass Fact Quality or access external systems. See [docs/source-inventory-producer.md](source-inventory-producer.md).

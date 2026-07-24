@@ -1,8 +1,18 @@
 import json, sqlite3
+from collections.abc import Mapping
 from pathlib import Path
 from contextlib import contextmanager
 from opportunity.evaluation.contracts import EvaluationFact, EvaluationFactCategory, FactVerification
 from .contracts import FactQualityAssessment, AcceptedFact, FactLifecycleEvent
+
+
+def _json_value(value):
+    """Convert recursively frozen accepted-fact data into JSON-safe values."""
+    if isinstance(value, Mapping):
+        return {key: _json_value(item) for key, item in value.items()}
+    if isinstance(value, (tuple, list, set, frozenset)):
+        return [_json_value(item) for item in value]
+    return value
 class FactQualityStore:
  def __init__(self,database:Path|str):
   self.database=str(database)
@@ -21,7 +31,7 @@ class FactQualityStore:
   with self._session() as db: db.execute('INSERT INTO fact_lifecycle VALUES (?,?,?,?)',(e.source_fact_id,e.status.value,e.reason,e.created_at))
  def append_accepted(self,a):
   f=a.fact
-  with self._session() as db: db.execute('INSERT INTO accepted_facts VALUES (?,?,?,?,?,?,?,?,?,?,?)',(a.accepted_fact_id,a.source_fact_id,a.quality_assessment_id,a.accepted_version,f.fact_id,f.category.value,json.dumps(f.value),json.dumps(f.evidence_ids),f.confidence,json.dumps(dict(f.provenance)),a.accepted_at))
+  with self._session() as db: db.execute('INSERT INTO accepted_facts VALUES (?,?,?,?,?,?,?,?,?,?,?)',(a.accepted_fact_id,a.source_fact_id,a.quality_assessment_id,a.accepted_version,f.fact_id,f.category.value,json.dumps(_json_value(f.value)),json.dumps(_json_value(f.evidence_ids)),f.confidence,json.dumps(_json_value(f.provenance)),a.accepted_at))
  def list_accepted_for_evidence_ids(self,ids):
   allowed=set(ids)
   with self._session() as db: rows=db.execute('SELECT * FROM accepted_facts ORDER BY accepted_at,id').fetchall()

@@ -27,3 +27,7 @@ Produced Facts are not Gate inputs until an independent deterministic quality as
 ## Deterministic Source Inventory Producer v0.1
 
 The first real Fact producer measures `available_sources@0.1` from persisted Evidence only. It emits a Measurement Artifact; it does not bypass Fact Quality or access external systems. See [docs/source-inventory-producer.md](source-inventory-producer.md).
+
+## Trend Signal Fact Producer v0.1
+
+`trend_up@0.1` is produced from one persisted, structured Trend Evidence record through the Fact Production and Fact Quality boundaries. See [docs/trend-signal-producer.md](trend-signal-producer.md).
